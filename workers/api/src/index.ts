@@ -1,13 +1,8 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import type { Item } from "./types";
 
 type Env = Record<string, never>;
-
-export type Item = {
-  id: number;
-  name: string;
-  createdAt: string;
-};
 
 const app = new Hono<{ Bindings: Env }>();
 

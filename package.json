@@ -54,7 +54,7 @@
 		"cf-typegen": "wrangler types --env-interface CloudflareEnv env.d.ts",
 		"check": "pnpm build && tsc",
 		"deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
-		"deploy:all": "pnpm deploy:workers && pnpm deploy",
+		"deploy:all": "pnpm run deploy:workers && pnpm run deploy",
 		"deploy:workers": "cd workers/api && pnpm run deploy",
 		"dev": "next dev",
 		"dev:all": "concurrently -n \"next,api\" -c \"blue,green\" \"pnpm dev\" \"cd workers/api && pnpm run dev\"",

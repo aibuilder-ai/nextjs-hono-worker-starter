@@ -1,5 +1,5 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
-import type { Item } from "../../../../workers/api/src/index";
+import type { Item } from "../../../../workers/api/src/types";
 
 export const runtime = "edge";
 
