@@ -1,8 +1,6 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import type { Item } from "../../../../workers/api/src/types";
 
-export const runtime = "edge";
-
 // In Cloudflare runtime: use the zero-latency service binding.
 // In local `next dev` (Node.js): fall back to direct HTTP to the wrangler dev server.
 const API_DEV_URL = "http://localhost:8787";

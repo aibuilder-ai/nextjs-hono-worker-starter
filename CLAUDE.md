@@ -145,5 +145,6 @@ import type { Item } from "../../../../workers/api/src/types";
 - **Workers in `workers/` are independent packages** — they have their own `node_modules`. Run `pnpm install` inside each worker directory separately.
 - **`wrangler.toml` is the single source of truth** for all bindings and worker config. JSONC is not used.
 - **Service binding URLs are fake hostnames** — `https://api-worker/path` routes via the binding name, not real DNS. Any hostname works.
-- **`export const runtime = "edge"`** is required on Next.js route handlers that use `getCloudflareContext()`.
+- **Never use `export const runtime = "edge"`** in Next.js route handlers. opennextjs-cloudflare runs the entire app on Cloudflare Workers already — adding `runtime = "edge"` causes the route to be compiled as a separate edge bundle that is silently excluded from the server output, making the route resolve to `undefined` at runtime (`TypeError: Cannot read properties of undefined (reading 'default')`).
+- **`getCloudflareContext()`** works in any route handler without special runtime flags. Use `{ async: true }` only for SSG routes.
 - **Never import from a worker's `index.ts`** in Next.js — it pulls in framework deps (hono, etc.) that aren't in the root `node_modules`. Only import from `types.ts`.
