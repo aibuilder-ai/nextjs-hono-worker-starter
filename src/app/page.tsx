@@ -1,88 +1,263 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect, useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+
+type Item = {
+  id: number;
+  name: string;
+  createdAt: string;
+};
+
+const STACK = [
+  {
+    title: "Next.js 16",
+    description:
+      "App Router with edge runtime. API routes live in src/app/api/ and call Cloudflare workers via service bindings.",
+    badge: "Frontend",
+    badgeVariant: "default" as const,
+  },
+  {
+    title: "Hono Worker",
+    description:
+      "Standalone Cloudflare Worker in workers/api/ built with Hono. Handles GET /items and POST /items.",
+    badge: "API",
+    badgeVariant: "secondary" as const,
+  },
+  {
+    title: "Service Binding",
+    description:
+      "Zero-latency, zero-cost calls between workers. No HTTP round-trip — env.API_WORKER.fetch() runs in the same datacenter.",
+    badge: "Cloudflare",
+    badgeVariant: "outline" as const,
+  },
+];
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [items, setItems] = useState<Item[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [name, setName] = useState("");
+  const [adding, setAdding] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  useEffect(() => {
+    fetchItems();
+  }, []);
+
+  async function fetchItems() {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/items");
+      const data = await res.json<{ items: Item[] }>();
+      setItems(data.items);
+    } catch {
+      setError("Failed to load items from the API worker.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function addItem(e: React.FormEvent) {
+    e.preventDefault();
+    if (!name.trim()) return;
+    setAdding(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/items", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name.trim() }),
+      });
+      const data = await res.json<{ item: Item } | { error: string }>();
+      if (!res.ok) {
+        setError("error" in data ? data.error : "Failed to add item.");
+        return;
+      }
+      if ("item" in data) {
+        setItems((prev) => [...prev, data.item]);
+        setName("");
+      }
+    } catch {
+      setError("Network error — is the API worker running?");
+    } finally {
+      setAdding(false);
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-background text-foreground">
+      {/* Header */}
+      <header className="border-b border-border px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <span className="font-semibold text-sm">next-cloud</span>
+          <Badge variant="outline">boilerplate</Badge>
         </div>
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary">Next.js 16</Badge>
+          <Badge variant="secondary">Hono</Badge>
+          <Badge variant="secondary">Cloudflare Workers</Badge>
+        </div>
+      </header>
+
+      <main className="max-w-4xl mx-auto px-6 py-12 space-y-12">
+        {/* Hero */}
+        <section className="space-y-2">
+          <h1 className="text-2xl font-semibold tracking-tight">
+            Cloudflare + Next.js Boilerplate
+          </h1>
+          <p className="text-sm text-muted-foreground max-w-xl">
+            Production-ready starter with Next.js on Cloudflare Workers, a Hono
+            API worker, and service bindings wired up end-to-end. Replace this
+            page with your app.
+          </p>
+        </section>
+
+        {/* Stack cards */}
+        <section className="space-y-3">
+          <h2 className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+            Stack
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-border">
+            {STACK.map((item) => (
+              <Card key={item.title} className="rounded-none ring-0">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle>{item.title}</CardTitle>
+                    <Badge variant={item.badgeVariant}>{item.badge}</Badge>
+                  </div>
+                  <CardDescription>{item.description}</CardDescription>
+                </CardHeader>
+              </Card>
+            ))}
+          </div>
+        </section>
+
+        {/* API demo */}
+        <section className="space-y-3">
+          <h2 className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+            Live API Demo — /api/items → api-worker
+          </h2>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-border">
+            {/* Items list */}
+            <Card className="rounded-none ring-0">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Items</CardTitle>
+                  <Badge variant="outline">{items.length}</Badge>
+                </div>
+                <CardDescription>
+                  Fetched via GET /api/items → service binding → Hono worker
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2 min-h-[120px]">
+                {loading ? (
+                  <p className="text-xs text-muted-foreground">Loading…</p>
+                ) : items.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">
+                    No items yet. Add one →
+                  </p>
+                ) : (
+                  items.map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between border border-border px-3 py-2"
+                    >
+                      <span className="text-xs">{item.name}</span>
+                      <span className="text-xs text-muted-foreground font-mono">
+                        #{item.id}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </CardContent>
+              <CardFooter>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={fetchItems}
+                  disabled={loading}
+                >
+                  {loading ? "Refreshing…" : "Refresh"}
+                </Button>
+              </CardFooter>
+            </Card>
+
+            {/* Add item form */}
+            <Card className="rounded-none ring-0">
+              <CardHeader>
+                <CardTitle>Add Item</CardTitle>
+                <CardDescription>
+                  POST /api/items → service binding → Hono worker
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={addItem} className="space-y-3">
+                  <Input
+                    placeholder="Item name…"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    disabled={adding}
+                  />
+                  {error && (
+                    <p className="text-xs text-destructive">{error}</p>
+                  )}
+                  <Button
+                    type="submit"
+                    size="sm"
+                    disabled={adding || !name.trim()}
+                    className="w-full"
+                  >
+                    {adding ? "Adding…" : "Add Item"}
+                  </Button>
+                </form>
+              </CardContent>
+              <CardFooter>
+                <p className="text-xs text-muted-foreground">
+                  Data lives in the Hono worker in-memory. Restart resets it.
+                </p>
+              </CardFooter>
+            </Card>
+          </div>
+        </section>
+
+        {/* Getting started */}
+        <section className="space-y-3">
+          <h2 className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+            Getting Started
+          </h2>
+          <Card className="rounded-none ring-0">
+            <CardContent className="pt-4 space-y-2">
+              {[
+                ["Start all dev servers", "pnpm dev:all"],
+                ["Deploy everything", "pnpm deploy:all"],
+                ["Regenerate types after binding changes", "pnpm cf-typegen"],
+              ].map(([label, cmd]) => (
+                <div
+                  key={cmd}
+                  className="flex items-center justify-between border border-border px-3 py-2"
+                >
+                  <span className="text-xs text-muted-foreground">{label}</span>
+                  <code className="text-xs font-mono bg-muted px-2 py-0.5">
+                    {cmd}
+                  </code>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </section>
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
     </div>
   );
 }

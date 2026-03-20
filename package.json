@@ -41,6 +41,7 @@
 		"@types/node": "24.10.1",
 		"@types/react": "19.2.7",
 		"@types/react-dom": "19.2.3",
+		"concurrently": "^9.2.1",
 		"eslint": "9.39.2",
 		"eslint-config-next": "16.0.7",
 		"tailwindcss": "4.1.17",
@@ -51,11 +52,12 @@
 	"scripts": {
 		"build": "next build",
 		"cf-typegen": "wrangler types --env-interface CloudflareEnv env.d.ts",
-		"check": "npm run build && tsc",
+		"check": "pnpm build && tsc",
 		"deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
-		"deploy:all": "npm run deploy:workers && npm run deploy",
-		"deploy:workers": "cd workers/api && npm run deploy",
+		"deploy:all": "pnpm deploy:workers && pnpm deploy",
+		"deploy:workers": "cd workers/api && pnpm run deploy",
 		"dev": "next dev",
+		"dev:all": "concurrently -n \"next,api\" -c \"blue,green\" \"pnpm dev\" \"cd workers/api && pnpm run dev\"",
 		"lint": "next lint",
 		"preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
 		"start": "next start"
