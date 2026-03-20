@@ -1,0 +1,31 @@
+# Wrangler configuration for the Next.js Cloudflare Worker (next-cloud)
+# Docs: https://developers.cloudflare.com/workers/wrangler/configuration/
+
+name = "next-cloud"
+main = ".open-next/worker.js"
+compatibility_date = "2025-10-08"
+compatibility_flags = ["nodejs_compat", "global_fetch_strictly_public"]
+upload_source_maps = true
+
+[assets]
+binding = "ASSETS"
+directory = ".open-next/assets"
+
+[observability]
+enabled = true
+
+# Smart Placement (optional — uncomment to enable)
+# https://developers.cloudflare.com/workers/configuration/smart-placement/
+# [placement]
+# mode = "smart"
+
+# Environment variables (non-secret)
+# https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
+# [vars]
+# MY_VARIABLE = "production_value"
+
+# Service Bindings — zero-latency calls between Workers
+# https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
+[[services]]
+binding = "API_WORKER"
+service = "api-worker"
